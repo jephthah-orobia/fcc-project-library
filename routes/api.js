@@ -48,7 +48,7 @@ const setReqUser = (req, res, next) => {
 
 module.exports = function (app) {
 
-  app.use('/api/books', logRequest, setReqUser);
+  app.use(logRequest, setReqUser);
 
   app.route('/api/books')
 
@@ -120,7 +120,6 @@ module.exports = function (app) {
 
 
 
-  app.use('/api/books/:id', logRequest, setReqUser);
   app.route('/api/books/:id')
 
     .get(logParams,
