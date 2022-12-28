@@ -30,7 +30,8 @@ const logPropsOf = (label, obj, indent = 2) => {
 }
 
 const logRequest = (req, res, next) => {
-    log(req.protocol, ":", req.method, "request from:", req.ip);
+    log('');
+    log(">>", req.method, ":", req.originalUrl, "from:", req.ip);
     next();
 }
 

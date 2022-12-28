@@ -134,11 +134,11 @@ module.exports = function (app) {
           res.send('no book exists');
       })
 
-    .post(logBody, function (req, res) {
+    .post(logParams, logBody, function (req, res) {
       let bookid = req.params.id;
       let comment = req.body.comment;
       if (!comment) {
-        logEr('missing required field comment');
+        logEr('<< missing required field comment');
         res.send('missing required field comment');
       }
 
@@ -148,7 +148,7 @@ module.exports = function (app) {
         books[0].comments.unshift(comment);
         books[0].save(err => {
           if (err) {
-            logEr(err + '');
+            logEr('<< ' + err);
             res.send(err + '');
           }
           else {
@@ -157,12 +157,14 @@ module.exports = function (app) {
           }
         });
       }
-      else
+      else {
+        logEr('<< no book exists');
         res.send('no book exists');
+      }
 
     })
 
-    .delete(logBody, function (req, res) {
+    .delete(logParams, logBody, function (req, res) {
       let bookid = req.params.id;
       //if successful response will be 'delete successful'
 
@@ -170,17 +172,19 @@ module.exports = function (app) {
 
       if (books.length == 1) {
         books[0].remove(err => {
-          if (err)
+          if (err) {
+            logEr('<<' + err);
             res.send(err + '');
+          }
           else {
             req.user.set('books', req.user.books.filter(elem => elem._id != bookid))
             req.user.save(err => {
               if (err) {
-                logEr(err + '');
+                logEr('<< ' + err);
                 res.send(err + '');
               }
               else {
-                log('delete successful');
+                log('<< delete successful');
                 res.send('delete successful')
               }
             });
@@ -188,7 +192,7 @@ module.exports = function (app) {
         });
       }
       else {
-        logEr('no book exists');
+        logEr('<< no book exists');
         res.send('no book exists');
       }
     });
