@@ -16,6 +16,7 @@ const { setDebugging, log, logRequest, logParams, logQuery, logBody } = require(
 
 setDebugging(process.env.DEBUG == 'yes');
 
+// middleware to be use to set req.user
 const setReqUser = (req, res, next) => {
   // since it's a "personal library", then each collection of books should by user
   // here, user will be identified by ipaddress
@@ -47,30 +48,25 @@ const setReqUser = (req, res, next) => {
 
 module.exports = function (app) {
 
+  app.use('/api/books', logRequest, setReqUser);
+
   app.route('/api/books')
 
-
-    .get(setReqUser,
-      function (req, res) {
-        //response will be array of book objects
-        //json res format: [{"_id": bookid, "title": book_title, "commentcount": num_of_comments },...]
-        res.json(req.user.books);
-      })
+    .get(function (req, res) {
+      //response will be array of book objects
+      //json res format: [{"_id": bookid, "title": book_title, "commentcount": num_of_comments },...]
+      res.json(req.user.books);
+    })
 
     .post(
       logBody,
-      setReqUser,
 
       //create book doc in db, if successful, set the doc to req.newBook
       (req, res, next) => {
         let title = req.body.title;
-        log("this is the value of title:", title);
-        log("this is the value of !title:", !title);
         //response will contain new book object including atleast _id and title
-        if (!title || title == '') {
-          log("sending error message:")
+        if (!title || title == '')
           res.send("missing required field title");
-        }
         else
           (new book({ title: title })).save((err, newBook) => {
             if (err && err instanceof Error.ValidationError)
@@ -104,10 +100,10 @@ module.exports = function (app) {
       }
     )
 
-    .delete(setReqUser, function (req, res) {
+    .delete(function (req, res) {
       //if successful response will be 'complete delete successful'
       book.deleteMany({ _id: { $in: req.user.books } }).then(data => {
-        if (data.deletedCount == req.user.boooks.length) {
+        if (data.deletedCount == req.user.books.length) {
           req.user.set('books', []);
           req.user.save((err) => {
             if (err)
@@ -124,19 +120,21 @@ module.exports = function (app) {
 
 
 
+  app.use('/api/books/:id', logRequest, setReqUser);
   app.route('/api/books/:id')
 
-    .get(setReqUser, function (req, res) {
-      let bookid = req.params.id;
-      //json res format: {"_id": bookid, "title": book_title, "comments": [comment,comment,...]}
-      let books = req.user.books.filter(elem => elem._id == bookid);
-      if (books.length == 1)
-        res.json(books[0]);
-      else
-        res.send('no book exists');
-    })
+    .get(logParams,
+      function (req, res) {
+        let bookid = req.params.id;
+        //json res format: {"_id": bookid, "title": book_title, "comments": [comment,comment,...]}
+        let books = req.user.books.filter(elem => elem._id == bookid);
+        if (books.length == 1)
+          res.json(books[0]);
+        else
+          res.send('no book exists');
+      })
 
-    .post(setReqUser, function (req, res) {
+    .post(logBody, function (req, res) {
       let bookid = req.params.id;
       let comment = req.body.comment;
       if (!comment)
@@ -150,18 +148,17 @@ module.exports = function (app) {
           if (err)
             res.send(err + '');
           else
-            res.json(books);
+            res.json(books[0]);
         });
       }
       else
-        res.send('no books exists');
+        res.send('no book exists');
 
     })
 
-    .delete(setReqUser, function (req, res) {
+    .delete(logBody, function (req, res) {
       let bookid = req.params.id;
       //if successful response will be 'delete successful'
-
 
       let books = req.user.books.filter(elem => elem._id == bookid);
 
