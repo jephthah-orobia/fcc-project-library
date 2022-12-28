@@ -2,6 +2,8 @@ require('dotenv').config();
 
 const { hasProps } = require('./obj-utils');
 
+const isDebugging = false;
+
 const log = function () {
     if (isDebugging)
         console.log(...arguments);

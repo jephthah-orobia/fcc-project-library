@@ -12,7 +12,7 @@ const { Error } = require("mongoose");
 const book = require("../data/models/book");
 const user = require("../data/models/user");
 
-const { setDebugging, log, logRequest, logParams, logQuery, logBody } = require('../log-utils');
+const { setDebugging, log, logEr, logRequest, logParams, logBody } = require('../log-utils');
 
 setDebugging(process.env.DEBUG == 'yes');
 
@@ -137,18 +137,24 @@ module.exports = function (app) {
     .post(logBody, function (req, res) {
       let bookid = req.params.id;
       let comment = req.body.comment;
-      if (!comment)
+      if (!comment) {
+        logEr('missing required field comment');
         res.send('missing required field comment');
+      }
 
       let books = req.user.books.filter(elem => elem._id == bookid);
 
       if (books.length == 1) {
         books[0].comments.unshift(comment);
         books[0].save(err => {
-          if (err)
+          if (err) {
+            logEr(err + '');
             res.send(err + '');
-          else
+          }
+          else {
+            logEr(JSON.stringify(books[0]));
             res.json(books[0]);
+          }
         });
       }
       else
@@ -169,16 +175,22 @@ module.exports = function (app) {
           else {
             req.user.set('books', req.user.books.filter(elem => elem._id != bookid))
             req.user.save(err => {
-              if (err)
+              if (err) {
+                logEr(err + '');
                 res.send(err + '');
-              else
+              }
+              else {
+                log('delete successful');
                 res.send('delete successful')
+              }
             });
           }
         });
       }
-      else
+      else {
+        logEr('no book exists');
         res.send('no book exists');
+      }
     });
 
 };
