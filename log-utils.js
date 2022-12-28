@@ -2,7 +2,7 @@ require('dotenv').config();
 
 const { hasProps } = require('./obj-utils');
 
-const isDebugging = false;
+let isDebugging = false;
 
 const log = function () {
     if (isDebugging)
