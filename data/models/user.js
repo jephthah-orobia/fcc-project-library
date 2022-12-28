@@ -14,7 +14,8 @@ const userSchema = new Schema({
     {
         collection: 'users',
         toJSON: { versionKey: false },
-        toObject: { versionKey: false }
+        toObject: { versionKey: false },
+        strictPopulate: false
     });
 
 
