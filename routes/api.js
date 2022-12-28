@@ -16,11 +16,11 @@ const { setDebugging, log, logRequest, logParams, logQuery, logBody } = require(
 
 setDebugging(process.env.DEBUG == 'yes');
 
-function setReqUser(req, res, next) {
+const setReqUser = (req, res, next) => {
   // since it's a "personal library", then each collection of books should by user
   // here, user will be identified by ipaddress
   const findUser = (done) => user.findOne({ ip: req.ip })
-    .populate('book')
+    .populate('books')
     .exec(done);
 
   const createUser = (done) => new user({ ip: req.ip })
@@ -58,10 +58,11 @@ module.exports = function (app) {
       })
 
     .post(
-      setReqUser,
-      logParams,
       logBody,
-      function (req, res) {
+      setReqUser,
+
+      //create book doc in db, if successful, set the doc to req.newBook
+      (req, res, next) => {
         let title = req.body.title;
         log("this is the value of title:", title);
         log("this is the value of !title:", !title);
@@ -77,16 +78,31 @@ module.exports = function (app) {
             else if (err)
               res.send(err + '');
             else {
-              req.user.books.unshift(newBook._id);
-              req.user.save((err1) => {
-                if (err1)
-                  res.send(err1 + '');
-                else
-                  res.json({ _id: newBook._id, title: newBook.title });
-              });
+              req.newBook = newBook;
+              next();
             }
           });
-      })
+      },
+
+      // add new book to list of books in req.user then save.
+      // if there are errors in added save the user doc, rollback the req.newBook.
+      (req, res) => {
+        req.user.books.unshift(req.newBook._id);
+        req.user.save((err) => {
+          if (err) {
+            // if user docs is not successfully saved, then delete the created book.
+            req.newBook.remove()
+              .then(() =>
+                res.send(err + '')
+              ).catch(e =>
+                res.send(err + '\n' + e)
+              );
+          }
+          else
+            res.json({ _id: req.newBook._id, title: req.newBook.title });
+        });
+      }
+    )
 
     .delete(setReqUser, function (req, res) {
       //if successful response will be 'complete delete successful'

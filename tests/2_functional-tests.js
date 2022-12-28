@@ -86,7 +86,6 @@ suite('Functional Tests', function () {
       });
 
     });
-    return;
 
     suite('GET /api/books/[id] => book object with [id]', function () {
 

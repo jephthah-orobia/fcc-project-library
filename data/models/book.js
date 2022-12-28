@@ -10,7 +10,8 @@ const bookSchema = new Schema({
 }, {
     collection: 'books',
     toJSON: { virtuals: true, versionKey: false },
-    toObject: { virtuals: true, versionKey: false }
+    toObject: { virtuals: true, versionKey: false },
+    id: false
 });
 
 bookSchema.virtual('commentcount').get(function () { return this.comments.length; });
