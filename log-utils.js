@@ -1,8 +1,6 @@
 require('dotenv').config();
 
-const { hasProps, hasPropsExcept, forEachProp } = require('./obj-utils');
-
-let isDebugging = false;
+const { hasProps } = require('./obj-utils');
 
 const log = function () {
     if (isDebugging)
@@ -18,21 +16,19 @@ const setDebugging = (debug) => {
     isDebugging = debug;
 };
 
-const logPropsOf = (label, obj) => {
-    if (isDebugging) {
-        console.log();
-        console.group();
-        console.group();
-        console.group(label);
+const logPropsOf = (label, obj, indent = 2) => {
+    if (isDebugging && hasProps(obj)) {
+        for (var i = 0; i < indent; i++)
+            console.group();
+        console.log(label);
         console.dir(obj, { compact: false, colors: true });
-        console.groupEnd();
-        console.groupEnd();
-        console.groupEnd();
+        for (var i = 0; i < indent; i++)
+            console.groupEnd();
     }
 }
 
 const logRequest = (req, res, next) => {
-    console.log(req.protocol, ":", req.method, "request from:", req.ip);
+    log(req.protocol, ":", req.method, "request from:", req.ip);
     next();
 }
 
